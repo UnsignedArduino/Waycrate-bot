@@ -2,6 +2,7 @@ import logging
 
 import interactions
 
+from filesystem import Interface
 from utils.environment import BOT_SCOPE
 from utils.logger import create_logger
 
@@ -14,25 +15,49 @@ class GitHubInfoCog(interactions.Extension):
         logger.info(f"{__class__.__name__} cog registered")
 
     @interactions.extension_command(
-        name="cat", description="Read from a file!", scope=BOT_SCOPE
+        name="cat", description="Read from a file!", scope=BOT_SCOPE,
+        options=[
+            interactions.Option(
+                name="path",
+                description="The file to read from.",
+                type=interactions.OptionType.STRING,
+                required=True
+            )
+        ]
     )
-    async def cat(self, ctx: interactions.CommandContext):
-        await ctx.send("cat")
+    async def cat(self, ctx: interactions.CommandContext, path: str):
+        await ctx.send(Interface.cat(path))
 
     @interactions.extension_command(
         name="ls", description="List the files in a directory!",
-        scope=BOT_SCOPE
+        scope=BOT_SCOPE,
+        options=[
+            interactions.Option(
+                name="path",
+                description="The directory to list in.",
+                type=interactions.OptionType.STRING,
+                required=False
+            )
+        ]
     )
-    async def ls(self, ctx: interactions.CommandContext):
-        await ctx.send("ls")
+    async def ls(self, ctx: interactions.CommandContext, path: str = "/"):
+        await ctx.send(Interface.ls(path))
 
     @interactions.extension_command(
         name="tree",
         description="Print a hierarchy of files and directories!",
-        scope=BOT_SCOPE
+        scope=BOT_SCOPE,
+        options=[
+            interactions.Option(
+                name="path",
+                description="The directory to list in.",
+                type=interactions.OptionType.STRING,
+                required=False
+            )
+        ]
     )
-    async def tree(self, ctx: interactions.CommandContext):
-        await ctx.send("tree")
+    async def tree(self, ctx: interactions.CommandContext, path: str = "/"):
+        await ctx.send(Interface.tree(path))
 
 
 def setup(client: interactions.Client):
