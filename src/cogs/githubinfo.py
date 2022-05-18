@@ -8,46 +8,6 @@ from utils.logger import create_logger
 logger = create_logger(name=__name__, level=logging.DEBUG)
 
 
-# Commands:
-# cat
-# ls
-# tree
-# help
-
-# "Filesystem":
-# Waycrate
-#   |- repos
-#   |   |- HerbWM
-#   |   |   |- githubrepo
-#   |   |   |- srhtrepo  # only if they have one
-#   |   |   |- github
-#   |   |   |   |- description
-#   |   |   |   |- stars
-#   |   |   |   |- forks
-#   |   |   |   |- watching
-#   |   |   |   |- language
-#   |   |   |   |- openissuescount
-#   |   |   |   |- license
-#   |   |   |   |- topics
-#   |   |- rpm-rs
-#   |   |   |- ... (same as above)
-#   |   |- rypper
-#   |   |- swhkd
-#   |   |- swhkd-vim
-#   |   |- swiv
-#   |   |- vim-swhkdrc
-#   |   |- wayboard
-#   |   |- waycast
-#   |   |- waylevel
-#   |   |- wayout
-#   |   |- wayshot
-#   |- stats
-#   |   |- repocount
-#   |   |- people
-#   |- githuborg
-#   |- website
-
-
 class GitHubInfoCog(interactions.Extension):
     def __init__(self, client: interactions.Client):
         self.client = client
