@@ -26,7 +26,7 @@ class GitHubInfoCog(interactions.Extension):
         ]
     )
     async def cat(self, ctx: interactions.CommandContext, path: str):
-        await ctx.send(f"```\n{Interface.cat(path)}\n```")
+        await self.send_result(ctx, Interface.cat(path))
 
     @interactions.extension_command(
         name="ls", description="List the files in a directory!",
@@ -41,7 +41,7 @@ class GitHubInfoCog(interactions.Extension):
         ]
     )
     async def ls(self, ctx: interactions.CommandContext, path: str = "/"):
-        await ctx.send(f"```\n{Interface.ls(path)}\n```")
+        await self.send_result(ctx, Interface.ls(path))
 
     @interactions.extension_command(
         name="tree",
@@ -57,7 +57,10 @@ class GitHubInfoCog(interactions.Extension):
         ]
     )
     async def tree(self, ctx: interactions.CommandContext, path: str = "/"):
-        lines = Interface.tree(path).split("\n")
+        await self.send_result(ctx, Interface.tree(path))
+
+    async def send_result(self, ctx: interactions.CommandContext, result: str):
+        lines = result.split("\n")
         groups = [""]
         MAX_CHARS = 2000 - 8
         for line in lines:
