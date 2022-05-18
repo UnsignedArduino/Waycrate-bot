@@ -178,13 +178,13 @@ class Interface:
         if filename not in cwd or isinstance(cwd[filename], str):
             return f"{path} [error opening dir]"
 
-        def text_tree(dir, level) -> str:
+        def text_tree(dir, level=1) -> str:
             things = []
-            spacer = " " * level
+            spacer = (" |  " * (level - 1)) + " |- "
             for key, value in dir.items():
                 things.append(spacer + key)
                 if isinstance(value, dict):
-                    things.append(f"{spacer}\n".join(text_tree(value, level + 1)))
-            return things
+                    things.append(text_tree(value, level+1))
+            return "\n".join(things)
 
-        return "\n".join(text_tree(cwd[filename], 1))
+        return f"{path}\n{text_tree(cwd[filename])}"
