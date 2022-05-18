@@ -106,7 +106,7 @@ class Filesystem:
 
 class Interface:
     @staticmethod
-    def cat(path: str) -> str:
+    def fix_path(path: str) -> str:
         if len(path) == 0:
             path = "/"
         if path[0] != "/":
@@ -115,9 +115,19 @@ class Interface:
             path = path[:-1]
         if len(path) == 0:
             path = "/"
+        return path
+
+    @staticmethod
+    def split_path(path: str) -> list[str]:
         components = path.split("/")[1:]
         if components[0] != "":
             components = [""] + components
+        return components
+
+    @staticmethod
+    def cat(path: str) -> str:
+        path = Interface.fix_path(path)
+        components = Interface.split_path(path)
         fs = Filesystem.filesystem()
         cwd = fs
         for directory in components[:-1]:
@@ -136,17 +146,8 @@ class Interface:
 
     @staticmethod
     def ls(path: str) -> str:
-        if len(path) == 0:
-            path = "/"
-        if path[0] != "/":
-            path = "/" + path
-        if path[-1] == "/":
-            path = path[:-1]
-        if len(path) == 0:
-            path = "/"
-        components = path.split("/")[1:]
-        if components[0] != "":
-            components = [""] + components
+        path = Interface.fix_path(path)
+        components = Interface.split_path(path)
         fs = Filesystem.filesystem()
         cwd = fs
         for directory in components[:-1]:
@@ -165,4 +166,25 @@ class Interface:
 
     @staticmethod
     def tree(path: str) -> str:
-        return ""
+        path = Interface.fix_path(path)
+        components = Interface.split_path(path)
+        fs = Filesystem.filesystem()
+        cwd = fs
+        for directory in components[:-1]:
+            if isinstance(cwd, str) or directory not in cwd:
+                return f"{path} [error opening dir]"
+            cwd = cwd[directory]
+        filename = components[-1]
+        if filename not in cwd or isinstance(cwd[filename], str):
+            return f"{path} [error opening dir]"
+
+        def text_tree(dir, level) -> str:
+            things = []
+            spacer = " " * level
+            for key, value in dir.items():
+                things.append(spacer + key)
+                if isinstance(value, dict):
+                    things.append(f"{spacer}\n".join(text_tree(value, level + 1)))
+            return things
+
+        return "\n".join(text_tree(cwd[filename], 1))
