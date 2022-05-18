@@ -81,14 +81,16 @@ def _init_filesystem() -> dict[str, dict[str, dict[str, str], str, str]]:
                         f"{PEOPLE_URL_PREFIX}{username}"
                         for person, username in PEOPLE.items()))
     fs = {
-        "Waycrate": {
-            "repos": repos,
-            "stats": {
-                "repocount": f"{len(repos)} repositories",
-                "people": people
-            },
-            "githuborg": "",
-            "website": ""
+        "": {
+            "Waycrate": {
+                "repos": repos,
+                "stats": {
+                    "repocount": f"{len(repos)} repositories",
+                    "people": people
+                },
+                "githuborg": "",
+                "website": ""
+            }
         }
     }
     return fs
@@ -105,11 +107,17 @@ class Filesystem:
 class Interface:
     @staticmethod
     def cat(path: str) -> str:
+        if len(path) == 0:
+            path = "/"
         if path[0] != "/":
             path = "/" + path
         if path[-1] == "/":
             path = path[:-1]
+        if len(path) == 0:
+            path = "/"
         components = path.split("/")[1:]
+        if components[0] != "":
+            components = [""] + components
         fs = Filesystem.filesystem()
         cwd = fs
         for directory in components[:-1]:
@@ -123,11 +131,37 @@ class Interface:
             return f"cat: can't open '{path}': No such file or directory"
         elif isinstance(cwd[filename], dict):
             return f"cat: read error: Is a directory"
-        return cwd[filename]
+        else:
+            return cwd[filename]
 
     @staticmethod
     def ls(path: str) -> str:
-        return ""
+        if len(path) == 0:
+            path = "/"
+        if path[0] != "/":
+            path = "/" + path
+        if path[-1] == "/":
+            path = path[:-1]
+        if len(path) == 0:
+            path = "/"
+        components = path.split("/")[1:]
+        if components[0] != "":
+            components = [""] + components
+        fs = Filesystem.filesystem()
+        cwd = fs
+        for directory in components[:-1]:
+            if isinstance(cwd, str):
+                return f"ls: {path}: Not a directory"
+            elif directory not in cwd:
+                return f"ls: {path}: No such file or directory"
+            cwd = cwd[directory]
+        filename = components[-1]
+        if filename not in cwd:
+            return f"ls: {path}: No such file or directory"
+        elif isinstance(cwd[filename], str):
+            return filename
+        else:
+            return " ".join(cwd[filename].keys())
 
     @staticmethod
     def tree(path: str) -> str:
