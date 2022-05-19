@@ -100,7 +100,7 @@ class Filesystem:
     _filesystem = _init_filesystem()
 
     @staticmethod
-    def filesystem() -> dict[str, dict[str, dict[str, str], str, str]]:
+    async def filesystem() -> dict[str, dict[str, dict[str, str], str, str]]:
         return Filesystem._filesystem
 
 
@@ -125,10 +125,10 @@ class Interface:
         return components
 
     @staticmethod
-    def cat(path: str) -> dict[str, str, bool]:
+    async def cat(path: str) -> dict[str, str, bool]:
         path = Interface.fix_path(path)
         components = Interface.split_path(path)
-        fs = Filesystem.filesystem()
+        fs = await Filesystem.filesystem()
         cwd = fs
         cmd = f"cat {path}"
         for directory in components[:-1]:
@@ -158,10 +158,10 @@ class Interface:
                     "success": True}
 
     @staticmethod
-    def ls(path: str) -> dict[str, str, bool]:
+    async def ls(path: str) -> dict[str, str, bool]:
         path = Interface.fix_path(path)
         components = Interface.split_path(path)
-        fs = Filesystem.filesystem()
+        fs = await Filesystem.filesystem()
         cwd = fs
         cmd = f"ls {path}"
         for directory in components[:-1]:
@@ -189,10 +189,10 @@ class Interface:
                     "success": True}
 
     @staticmethod
-    def tree(path: str) -> dict[str, str, bool]:
+    async def tree(path: str) -> dict[str, str, bool]:
         path = Interface.fix_path(path)
         components = Interface.split_path(path)
-        fs = Filesystem.filesystem()
+        fs = await Filesystem.filesystem()
         cwd = fs
         cmd = f"tree {path}"
         for directory in components[:-1]:

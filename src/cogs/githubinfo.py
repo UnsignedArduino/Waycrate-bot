@@ -26,7 +26,7 @@ class GitHubInfoCog(interactions.Extension):
         ]
     )
     async def cat(self, ctx: interactions.CommandContext, path: str):
-        await self.send_result(ctx, Interface.cat(path))
+        await self.send_result(ctx, await Interface.cat(path))
 
     @interactions.extension_command(
         name="ls", description="List the files in a directory!",
@@ -41,7 +41,7 @@ class GitHubInfoCog(interactions.Extension):
         ]
     )
     async def ls(self, ctx: interactions.CommandContext, path: str = "/"):
-        await self.send_result(ctx, Interface.ls(path))
+        await self.send_result(ctx, await Interface.ls(path))
 
     @interactions.extension_command(
         name="tree",
@@ -57,7 +57,7 @@ class GitHubInfoCog(interactions.Extension):
         ]
     )
     async def tree(self, ctx: interactions.CommandContext, path: str = "/"):
-        await self.send_result(ctx, Interface.tree(path))
+        await self.send_result(ctx, await Interface.tree(path))
 
     async def send_result(self, ctx: interactions.CommandContext,
                           result: dict):
