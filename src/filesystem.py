@@ -72,7 +72,7 @@ def _copy_repo_struct() -> dict[str, dict[str, ...]]:
     }.copy()
 
 
-def _init_filesystem() -> dict[str, dict[str, dict[str, str], str, str]]:
+async def _init_filesystem() -> dict[str, dict[str, dict[str, str], str, str]]:
     repos = {}
     for repo in REPOSITORIES:
         repos[repo] = _copy_repo_struct()
@@ -80,7 +80,7 @@ def _init_filesystem() -> dict[str, dict[str, dict[str, str], str, str]]:
     people = "\n".join((f"{person} ({username}) at "
                         f"{PEOPLE_URL_PREFIX}{username}"
                         for person, username in PEOPLE.items()))
-    fs = {
+    return {
         "": {
             "Waycrate": {
                 "repos": repos,
@@ -88,19 +88,20 @@ def _init_filesystem() -> dict[str, dict[str, dict[str, str], str, str]]:
                     "repocount": f"{len(repos)} repositories",
                     "people": people
                 },
-                "githuborg": "",
-                "website": ""
+                "githuborg": "https://github.com/waycrate",
+                "website": "https://waycrate.github.io/"
             }
         }
     }
-    return fs
 
 
 class Filesystem:
-    _filesystem = _init_filesystem()
+    _filesystem = None
 
     @staticmethod
     async def filesystem() -> dict[str, dict[str, dict[str, str], str, str]]:
+        if Filesystem._filesystem is None:
+            Filesystem._filesystem = await _init_filesystem()
         return Filesystem._filesystem
 
 
