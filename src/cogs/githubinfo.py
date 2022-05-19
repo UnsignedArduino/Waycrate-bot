@@ -59,17 +59,12 @@ class GitHubInfoCog(interactions.Extension):
     async def tree(self, ctx: interactions.CommandContext, path: str = "/"):
         await self.send_result(ctx, Interface.tree(path))
 
-    async def send_result(self, ctx: interactions.CommandContext, result: str):
-        lines = result.split("\n")
-        groups = [""]
-        MAX_CHARS = 2000 - 8
-        for line in lines:
-            if len(groups[-1]) + len(line) + 2 > MAX_CHARS:
-                groups.append(line + "\n")
-            else:
-                groups[-1] += line + "\n"
-        for group in groups:
-            await ctx.send(f"```\n{group}\n```")
+    async def send_result(self, ctx: interactions.CommandContext,
+                          result: dict):
+        embed = interactions.Embed(color=0 if result['success'] else 0xFF0000)
+        embed.add_field(name=f"`{result['command']}`",
+                        value=f"```\n{result['output']}\n```")
+        await ctx.send(embeds=embed)
 
 
 def setup(client: interactions.Client):

@@ -125,58 +125,87 @@ class Interface:
         return components
 
     @staticmethod
-    def cat(path: str) -> str:
+    def cat(path: str) -> dict[str, str, bool]:
         path = Interface.fix_path(path)
         components = Interface.split_path(path)
         fs = Filesystem.filesystem()
         cwd = fs
+        cmd = f"cat {path}"
         for directory in components[:-1]:
             if isinstance(cwd, str):
-                return f"cat: can't open '{path}': Not a directory"
+                return {"command": cmd,
+                        "output": f"cat: can't open '{path}': Not a directory",
+                        "success": False}
             elif directory not in cwd:
-                return f"cat: can't open '{path}': No such file or directory"
+                return {"command": cmd,
+                        "output": f"cat: can't open '{path}': "
+                                  f"No such file or directory",
+                        "success": False}
             cwd = cwd[directory]
         filename = components[-1]
         if filename not in cwd:
-            return f"cat: can't open '{path}': No such file or directory"
+            return {"command": cmd,
+                    "output": f"cat: can't open '{path}': "
+                              f"No such file or directory",
+                    "success": False}
         elif isinstance(cwd[filename], dict):
-            return f"cat: read error: Is a directory"
+            return {"command": cmd,
+                    "output": f"cat: read error: Is a directory",
+                    "success": False}
         else:
-            return cwd[filename]
+            return {"command": cmd,
+                    "output": cwd[filename],
+                    "success": True}
 
     @staticmethod
-    def ls(path: str) -> str:
+    def ls(path: str) -> dict[str, str, bool]:
         path = Interface.fix_path(path)
         components = Interface.split_path(path)
         fs = Filesystem.filesystem()
         cwd = fs
+        cmd = f"ls {path}"
         for directory in components[:-1]:
             if isinstance(cwd, str):
-                return f"ls: {path}: Not a directory"
+                return {"command": cmd,
+                        "output": f"ls: {path}: Not a directory",
+                        "success": False}
             elif directory not in cwd:
-                return f"ls: {path}: No such file or directory"
+                return {"command": cmd,
+                        "output": f"ls: {path}: No such file or directory",
+                        "success": False}
             cwd = cwd[directory]
         filename = components[-1]
         if filename not in cwd:
-            return f"ls: {path}: No such file or directory"
+            return {"command": cmd,
+                    "output": f"ls: {path}: No such file or directory",
+                    "success": False}
         elif isinstance(cwd[filename], str):
-            return filename
+            return {"command": cmd,
+                    "output": filename,
+                    "success": True}
         else:
-            return " ".join(cwd[filename].keys())
+            return {"command": cmd,
+                    "output": " ".join(cwd[filename].keys()),
+                    "success": True}
 
     @staticmethod
-    def tree(path: str) -> str:
+    def tree(path: str) -> dict[str, str, bool]:
         path = Interface.fix_path(path)
         components = Interface.split_path(path)
         fs = Filesystem.filesystem()
         cwd = fs
+        cmd = f"tree {path}"
         for directory in components[:-1]:
             if isinstance(cwd, str) or directory not in cwd:
-                return f"{path} [error opening dir]"
+                return {"command": cmd,
+                        "output": f"{path} [error opening dir]",
+                        "success": False}
             cwd = cwd[directory]
         filename = components[-1]
         if filename not in cwd or isinstance(cwd[filename], str):
-            return f"{path} [error opening dir]"
+            return {"command": cmd,
+                    "output": f"{path} [error opening dir]",
+                    "success": False}
 
         def text_tree(dir, level=1) -> str:
             things = []
@@ -187,4 +216,6 @@ class Interface:
                     things.append(text_tree(value, level+1))
             return "\n".join(things)
 
-        return f"{path}\n{text_tree(cwd[filename])}"
+        return {"command": cmd,
+                "output": f"{path}\n{text_tree(cwd[filename])}",
+                "success": True}
