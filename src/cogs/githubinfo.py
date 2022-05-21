@@ -77,7 +77,8 @@ class GitHubInfoCog(interactions.Extension):
         # | footer.text | 2048 characters        |
         # | author.name | 256 characters         |
         # +-------------+------------------------+
-        if len(result['output']) < 1024 - 8:
+        result["output"] = str(result["output"])
+        if len(result["output"]) < 1024 - 8:
             embeds = interactions.Embed(color=0 if result["success"]
                                              else 0xFF0000)
             embeds.add_field(name=f"`{result['command']}`",

@@ -1,3 +1,12 @@
+import logging
+
+from utils.logger import create_logger
+from utils.request import json_request
+
+logger = create_logger(name=__name__, level=logging.DEBUG)
+
+API_URL_PREFIX = "https://api.github.com/repos/waycrate/"
+
 REPO_URL_PREFIX = "https://github.com/waycrate/"
 
 REPOSITORIES = [
@@ -25,6 +34,7 @@ PEOPLE = {
     "Ckyiu": "UnsignedArduino",
     "Väinö Mäkelä": "vainiovano"
 }
+
 
 # Commands:
 # cat
@@ -77,6 +87,22 @@ async def _init_filesystem() -> dict[str, dict[str, dict[str, str], str, str]]:
     for repo in REPOSITORIES:
         repos[repo] = _copy_repo_struct()
         repos[repo]["github"]["url"] = f"{REPO_URL_PREFIX}{repo}"
+        json = await json_request(f"{API_URL_PREFIX}{repo}")
+        repos[repo]["github"]["description"] = json["description"]
+        repos[repo]["github"]["stars"] = f"{json['stargazers_count']} star" \
+                                         f"{'' if json['stargazers_count'] == 1 else 's'}"
+        repos[repo]["github"]["forks"] = f"{json['forks_count']} fork" \
+                                         f"{'' if json['forks_count'] == 1 else 's'}"
+        repos[repo]["github"]["watching"] = f"{json['watchers_count']} " \
+                                            f"watching"
+        repos[repo]["github"]["language"] = json["language"]
+        repos[repo]["github"]["openissuescount"] = f"{json['open_issues_count']} open issue" \
+                                            f"{'' if json['open_issues_count'] == 1 else 's'}"
+        if json["license"]:
+            repos[repo]["github"]["license"] = json["license"]["name"]
+        else:
+            repos[repo]["github"]["license"] = "(No license set)"
+        repos[repo]["github"]["topics"] = ", ".join(json["topics"])
     people = "\n".join((f"{person} ({username}) at "
                         f"{PEOPLE_URL_PREFIX}{username}"
                         for person, username in PEOPLE.items()))
@@ -214,7 +240,7 @@ class Interface:
             for key, value in dir.items():
                 things.append(spacer + key)
                 if isinstance(value, dict):
-                    things.append(text_tree(value, level+1))
+                    things.append(text_tree(value, level + 1))
             return "\n".join(things)
 
         return {"command": cmd,
