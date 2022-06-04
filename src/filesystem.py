@@ -280,13 +280,15 @@ class Interface:
         for directory in components[:-1]:
             if isinstance(cwd, str) or directory not in cwd:
                 return {"command": cmd,
-                        "output": f"{path} [error opening dir]",
+                        "output": f"{path} [error opening dir]\n\n"
+                                  f"0 directories, 0 files",
                         "success": False}
             cwd = cwd[directory]
         filename = components[-1]
         if filename not in cwd or isinstance(cwd[filename], str):
             return {"command": cmd,
-                    "output": f"{path} [error opening dir]",
+                    "output": f"{path} [error opening dir]\n\n"
+                              f"0 directories, 0 files",
                     "success": False}
 
         def text_tree(dir, level=1) -> str:
@@ -298,6 +300,23 @@ class Interface:
                     things.append(text_tree(value, level + 1))
             return "\n".join(things)
 
+        def file_dir_count(dir) -> tuple[int, int]:
+            files = 0
+            directories = 0
+            for key, value in dir.items():
+                if isinstance(value, dict):
+                    directories += 1
+                    dir_f, dir_d = file_dir_count(value)
+                    files += dir_f
+                    directories += dir_d
+                else:
+                    files += 1
+            return files, directories
+
+        files, dirs = file_dir_count(cwd[filename])
         return {"command": cmd,
-                "output": f"{path}\n{text_tree(cwd[filename])}",
+                "output": f"{path}\n"
+                          f"{text_tree(cwd[filename])}\n\n"
+                          f"{dirs} director{aip(dirs, 'ies', 'y')}, "
+                          f"{files} file{aip(files)}",
                 "success": True}
