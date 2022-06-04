@@ -1,5 +1,7 @@
 import logging
 
+from utils.english import aip
+from utils.environment import GET_REAL_DATA
 from utils.logger import create_logger
 from utils.request import json_request
 
@@ -83,21 +85,45 @@ def _copy_repo_struct() -> dict[str, dict[str, ...]]:
 
 
 async def _init_filesystem() -> dict[str, dict[str, dict[str, str], str, str]]:
+    logger.info("Initializing/reloading filesystem data")
     repos = {}
     for repo in REPOSITORIES:
         repos[repo] = _copy_repo_struct()
         repos[repo]["github"]["url"] = f"{REPO_URL_PREFIX}{repo}"
-        json = await json_request(f"{API_URL_PREFIX}{repo}")
+        if GET_REAL_DATA:
+            json = await json_request(f"{API_URL_PREFIX}{repo}")
+        else:
+            json = {
+                "description": "Here's a fake description - "
+                               "fake data mode is on!",
+                "stargazers_count": 0,
+                "forks_count": 0,
+                "watchers_count": 0,
+                "language": "Probably Rust, because fake data mode is on!",
+                "open_issues_count": 0,
+                "license": {
+                    "name": "BSD 2-Clause \"Simplified\" License"
+                },
+                "topics": [
+                    "fake-data",
+                    "fake-data-mode",
+                    "dev-mode",
+                    "fake-data-enabled",
+                    "dev-mode-enabled",
+                    "emulated-data"
+                ]
+            }
         repos[repo]["github"]["description"] = json["description"]
         repos[repo]["github"]["stars"] = f"{json['stargazers_count']} star" \
-                                         f"{'' if json['stargazers_count'] == 1 else 's'}"
+                                         f"{aip(json['stargazers_count'])}"
         repos[repo]["github"]["forks"] = f"{json['forks_count']} fork" \
-                                         f"{'' if json['forks_count'] == 1 else 's'}"
+                                         f"{aip(json['forks_count'])}"
         repos[repo]["github"]["watching"] = f"{json['watchers_count']} " \
                                             f"watching"
         repos[repo]["github"]["language"] = json["language"]
-        repos[repo]["github"]["openissuescount"] = f"{json['open_issues_count']} open issue" \
-                                            f"{'' if json['open_issues_count'] == 1 else 's'}"
+        repos[repo]["github"]["openissuescount"] = f"{json['open_issues_count']} " \
+                                                   f"open issue" \
+                                                   f"{aip(json['open_issues_count'])}"
         if json["license"]:
             repos[repo]["github"]["license"] = json["license"]["name"]
         else:
