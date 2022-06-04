@@ -216,23 +216,24 @@ class Interface:
         for directory in components[:-1]:
             if isinstance(cwd, str):
                 return {"command": cmd,
-                        "output": f"cat: can't open '{path}': Not a directory",
+                        "output": f"cat: {path}: "
+                                  f"No such file or directory",
                         "success": False}
             elif directory not in cwd:
                 return {"command": cmd,
-                        "output": f"cat: can't open '{path}': "
+                        "output": f"cat: {path}: "
                                   f"No such file or directory",
                         "success": False}
             cwd = cwd[directory]
         filename = components[-1]
         if filename not in cwd:
             return {"command": cmd,
-                    "output": f"cat: can't open '{path}': "
+                    "output": f"cat: {path}: "
                               f"No such file or directory",
                     "success": False}
         elif isinstance(cwd[filename], dict):
             return {"command": cmd,
-                    "output": f"cat: read error: Is a directory",
+                    "output": f"cat: {path}: Is a directory",
                     "success": False}
         else:
             return {"command": cmd,
