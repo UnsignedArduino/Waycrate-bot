@@ -1,7 +1,9 @@
 import logging
 
+import arrow
+
 from utils.english import aip
-from utils.environment import GET_REAL_DATA
+from utils.environment import GET_REAL_DATA, REFRESH_RATE_SECS
 from utils.logger import create_logger
 from utils.request import json_request
 
@@ -66,94 +68,121 @@ PEOPLE = {
 #   |   |- people
 #   |- githuborg
 #   |- website
-
-
-def _copy_repo_struct() -> dict[str, dict[str, ...]]:
-    return {
-        "github": {
-            "url": "",
-            "description": "",
-            "stars": "",
-            "forks": "",
-            "watching": "",
-            "language": "",
-            "openissuescount": "",
-            "license": "",
-            "topics": ""
-        }
-    }.copy()
-
-
-async def _init_filesystem() -> dict[str, dict[str, dict[str, str], str, str]]:
-    logger.info("Initializing/reloading filesystem data")
-    repos = {}
-    for repo in REPOSITORIES:
-        repos[repo] = _copy_repo_struct()
-        repos[repo]["github"]["url"] = f"{REPO_URL_PREFIX}{repo}"
-        if GET_REAL_DATA:
-            json = await json_request(f"{API_URL_PREFIX}{repo}")
-        else:
-            json = {
-                "description": "Here's a fake description - "
-                               "fake data mode is on!",
-                "stargazers_count": 0,
-                "forks_count": 0,
-                "watchers_count": 0,
-                "language": "Probably Rust, because fake data mode is on!",
-                "open_issues_count": 0,
-                "license": {
-                    "name": "BSD 2-Clause \"Simplified\" License"
-                },
-                "topics": [
-                    "fake-data",
-                    "fake-data-mode",
-                    "dev-mode",
-                    "fake-data-enabled",
-                    "dev-mode-enabled",
-                    "emulated-data"
-                ]
-            }
-        repos[repo]["github"]["description"] = json["description"]
-        repos[repo]["github"]["stars"] = f"{json['stargazers_count']} star" \
-                                         f"{aip(json['stargazers_count'])}"
-        repos[repo]["github"]["forks"] = f"{json['forks_count']} fork" \
-                                         f"{aip(json['forks_count'])}"
-        repos[repo]["github"]["watching"] = f"{json['watchers_count']} " \
-                                            f"watching"
-        repos[repo]["github"]["language"] = json["language"]
-        repos[repo]["github"]["openissuescount"] = f"{json['open_issues_count']} " \
-                                                   f"open issue" \
-                                                   f"{aip(json['open_issues_count'])}"
-        if json["license"]:
-            repos[repo]["github"]["license"] = json["license"]["name"]
-        else:
-            repos[repo]["github"]["license"] = "(No license set)"
-        repos[repo]["github"]["topics"] = ", ".join(json["topics"])
-    people = "\n".join((f"{person} ({username}) at "
-                        f"{PEOPLE_URL_PREFIX}{username}"
-                        for person, username in PEOPLE.items()))
-    return {
-        "": {
-            "Waycrate": {
-                "repos": repos,
-                "stats": {
-                    "repocount": f"{len(repos)} repositories",
-                    "people": people
-                },
-                "githuborg": "https://github.com/waycrate",
-                "website": "https://waycrate.github.io/"
-            }
-        }
-    }
+#   |- datalifespan
 
 
 class Filesystem:
     _filesystem = None
+    _last_refresh = 0
+
+    @staticmethod
+    def _copy_repo_struct() -> dict[str, dict[str, ...]]:
+        return {
+            "github": {
+                "url": "",
+                "description": "",
+                "stars": "",
+                "forks": "",
+                "watching": "",
+                "language": "",
+                "openissuescount": "",
+                "license": "",
+                "topics": ""
+            }
+        }.copy()
+
+    @staticmethod
+    async def _init_filesystem() -> dict[str, dict[str, dict[str, str], str, str]]:
+        logger.info("Initializing/reloading filesystem data")
+        repos = {}
+        for repo in REPOSITORIES:
+            repos[repo] = Filesystem._copy_repo_struct()
+            repos[repo]["github"]["url"] = f"{REPO_URL_PREFIX}{repo}"
+            if GET_REAL_DATA:
+                json = await json_request(f"{API_URL_PREFIX}{repo}")
+            else:
+                json = {
+                    "description": "Here's a fake description - "
+                                   "fake data mode is on!",
+                    "stargazers_count": 0,
+                    "forks_count": 0,
+                    "watchers_count": 0,
+                    "language": "Probably Rust, because fake data mode is on!",
+                    "open_issues_count": 0,
+                    "license": {
+                        "name": "BSD 2-Clause \"Simplified\" License"
+                    },
+                    "topics": [
+                        "fake-data",
+                        "fake-data-mode",
+                        "dev-mode",
+                        "fake-data-enabled",
+                        "dev-mode-enabled",
+                        "emulated-data"
+                    ]
+                }
+            repos[repo]["github"]["description"] = json["description"]
+            repos[repo]["github"]["stars"] = f"{json['stargazers_count']} star" \
+                                             f"{aip(json['stargazers_count'])}"
+            repos[repo]["github"]["forks"] = f"{json['forks_count']} fork" \
+                                             f"{aip(json['forks_count'])}"
+            repos[repo]["github"]["watching"] = f"{json['watchers_count']} " \
+                                                f"watching"
+            repos[repo]["github"]["language"] = json["language"]
+            repos[repo]["github"][
+                "openissuescount"] = f"{json['open_issues_count']} " \
+                                     f"open issue" \
+                                     f"{aip(json['open_issues_count'])}"
+            if json["license"]:
+                repos[repo]["github"]["license"] = json["license"]["name"]
+            else:
+                repos[repo]["github"]["license"] = "(No license set)"
+            repos[repo]["github"]["topics"] = ", ".join(json["topics"])
+        people = "\n".join((f"{person} ({username}) at "
+                            f"{PEOPLE_URL_PREFIX}{username}"
+                            for person, username in PEOPLE.items()))
+        Filesystem._last_refresh = arrow.utcnow().int_timestamp
+        return {
+            "": {
+                "Waycrate": {
+                    "repos": repos,
+                    "stats": {
+                        "repocount": f"{len(repos)} repositories",
+                        "people": people
+                    },
+                    "githuborg": "https://github.com/waycrate",
+                    "website": "https://waycrate.github.io/"
+                }
+            }
+        }
+
+    @staticmethod
+    async def _last_update_text() -> str:
+        last_update = arrow.get(Filesystem._last_refresh)
+        last_update_utc = last_update.to("utc")
+        # Example: Sunday, January 1, 2017, at 00:00:00 UTC
+        # fmt_string = "%a, %b %w, %Y, at %H:%M:%S UTC"
+        fmt_string = "dddd, MMMM DD, YYYY"
+        fmt2_string = "HH:mm:ss"
+        last_update_fmt = f"{last_update_utc.format(fmt_string)}, at " \
+                          f"{last_update_utc.format(fmt2_string)} UTC"
+        next_update = arrow.get(Filesystem._last_refresh + REFRESH_RATE_SECS)
+        next_update_utc = next_update.to("utc")
+        next_update_fmt = f"{next_update_utc.format(fmt_string)}, at " \
+                          f"{next_update_utc.format(fmt2_string)} UTC"
+        last_updated = f"Filesystem last updated {last_update.humanize()} " \
+                       f"({last_update_fmt}) - next update " \
+                       f"{next_update.humanize()} ({next_update_fmt})"
+        return last_updated
 
     @staticmethod
     async def filesystem() -> dict[str, dict[str, dict[str, str], str, str]]:
-        if Filesystem._filesystem is None:
-            Filesystem._filesystem = await _init_filesystem()
+        if Filesystem._filesystem is None or \
+            (arrow.utcnow().int_timestamp -
+             Filesystem._last_refresh) > REFRESH_RATE_SECS:
+            Filesystem._filesystem = await Filesystem._init_filesystem()
+
+        Filesystem._filesystem[""]["Waycrate"]["lastupdated"] = await Filesystem._last_update_text()
         return Filesystem._filesystem
 
 

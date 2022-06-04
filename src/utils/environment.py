@@ -6,7 +6,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from interactions import MISSING
 
-from utils.english import boolean_parse
+from utils.english import boolean_parse, time_parse
 from utils.logger import create_logger
 
 logger = create_logger(name=__name__, level=logging.DEBUG)
@@ -16,6 +16,7 @@ ENV_PATH = Path.cwd().parent / ".env"
 BOT_TOKEN = None
 BOT_SCOPE = None
 GET_REAL_DATA = True
+REFRESH_RATE_SECS = None
 
 if not ENV_PATH.exists():
     raise FileNotFoundError(f"Path to .env file "
@@ -48,3 +49,8 @@ if GET_REAL_DATA:
     logger.info("Using real data from GitHub API for emulated filesystem")
 else:
     logger.warning("Using fake data for emulated filesystem")
+
+REFRESH_RATE_SECS = time_parse(os.environ.get("DATA_REFRESH_RATE"))
+
+logger.info(f"Refresh will be triggered on command if {REFRESH_RATE_SECS} "
+            f"has passed since the last call!")

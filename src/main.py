@@ -3,6 +3,7 @@ from pathlib import Path
 
 import interactions
 
+from utils.english import aip
 from utils.environment import BOT_TOKEN
 from utils.logger import create_logger
 
@@ -38,7 +39,7 @@ cogs = [
        not module.name.startswith("_")
 ]
 
-logger.info(f"Importing {len(cogs)} cog{'s' if len(cogs) != 1 else ''}")
+logger.info(f"Importing {len(cogs)} cog{aip(len(cogs))}")
 
 for cog in cogs:
     cog_name = "cogs." + cog
