@@ -249,17 +249,20 @@ class Interface:
         for directory in components[:-1]:
             if isinstance(cwd, str):
                 return {"command": cmd,
-                        "output": f"ls: {path}: Not a directory",
+                        "output": f"ls: cannot access '{path}': "
+                                  f"No such file or directory",
                         "success": False}
             elif directory not in cwd:
                 return {"command": cmd,
-                        "output": f"ls: {path}: No such file or directory",
+                        "output": f"ls: cannot access '{path}': "
+                                  f"No such file or directory",
                         "success": False}
             cwd = cwd[directory]
         filename = components[-1]
         if filename not in cwd:
             return {"command": cmd,
-                    "output": f"ls: {path}: No such file or directory",
+                    "output": f"ls: cannot access '{path}': "
+                              f"No such file or directory",
                     "success": False}
         elif isinstance(cwd[filename], str):
             return {"command": cmd,
